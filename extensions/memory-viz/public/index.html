@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory - Clawdbot</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #12141a;
+            --bg-accent: #14161d;
+            --bg-elevated: #1a1d25;
+            --bg-hover: #262a35;
+            --bg-muted: #262a35;
+            --card: #181b22;
+            --card-foreground: #f4f4f5;
+            --card-highlight: rgba(255, 255, 255, 0.05);
+            --text: #e4e4e7;
+            --text-strong: #fafafa;
+            --muted: #71717a;
+            --muted-strong: #52525b;
+            --border: #27272a;
+            --border-strong: #3f3f46;
+            --border-hover: #52525b;
+            --input: #27272a;
+            --ring: #ff5c5c;
+            --accent: #ff5c5c;
+            --accent-hover: #ff7070;
+            --accent-muted: #ff5c5c;
+            --accent-subtle: rgba(255, 92, 92, 0.15);
+            --accent-foreground: #fafafa;
+            --accent-glow: rgba(255, 92, 92, 0.25);
+            --primary: #ff5c5c;
+            --primary-foreground: #ffffff;
+            --secondary: #1e2028;
+            --secondary-foreground: #f4f4f5;
+            --accent-2: #14b8a6;
+            --accent-2-muted: rgba(20, 184, 166, 0.7);
+            --accent-2-subtle: rgba(20, 184, 166, 0.15);
+            --ok: #22c55e;
+            --ok-muted: rgba(34, 197, 94, 0.75);
+            --ok-subtle: rgba(34, 197, 94, 0.12);
+            --destructive: #ef4444;
+            --warn: #f59e0b;
+            --info: #3b82f6;
+            --focus: rgba(255, 92, 92, 0.25);
+            --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.03);
+            --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.03);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-full: 9999px;
+            --font-body: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font: 400 14px/1.55 var(--font-body);
+            letter-spacing: -0.02em;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            color: var(--text-strong);
+        }
+
+        .header-title .badge {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            background: var(--accent-subtle);
+            color: var(--accent);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Button */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-elevated);
+            padding: 9px 16px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: var(--text);
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-strong);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn.primary {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: var(--primary-foreground);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn.primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            box-shadow: var(--shadow-md), 0 0 20px var(--accent-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 0 var(--card-highlight);
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-strong);
+            box-shadow: var(--shadow-sm), inset 0 1px 0 var(--card-highlight);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            color: var(--text-strong);
+        }
+
+        .stat-value.ok {
+            color: var(--ok);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm), inset 0 1px 0 var(--card-highlight);
+        }
+
+        .card:hover {
+            border-color: var(--border-strong);
+            box-shadow: var(--shadow-md), inset 0 1px 0 var(--card-highlight);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text-strong);
+        }
+
+        .card-subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* File List */
+        .file-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg-elevated);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .file-item:hover {
+            border-color: var(--border-strong);
+            background: var(--bg-hover);
+        }
+
+        .file-item.active {
+            border-color: var(--accent);
+            background: var(--accent-subtle);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        .file-name {
+            font-weight: 500;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: var(--mono);
+        }
+
+        .file-type {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            background: var(--secondary);
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        /* Markdown Content */
+        .markdown-content {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+        }
+
+        .markdown-content h1 {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 1em 0 0.5em;
+            color: var(--text-strong);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.3em;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 1em 0 0.5em;
+            color: var(--text);
+        }
+
+        .markdown-content h3 {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin: 0.8em 0 0.4em;
+            color: var(--text);
+        }
+
+        .markdown-content p {
+            margin: 0.5em 0;
+            line-height: 1.6;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+        }
+
+        .markdown-content li {
+            margin: 0.3em 0;
+        }
+
+        .markdown-content code {
+            background: var(--bg-hover);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: var(--mono);
+            color: var(--accent-2);
+        }
+
+        .markdown-content pre {
+            background: var(--bg-elevated);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 1em 0;
+            border: 1px solid var(--border);
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text);
+        }
+
+        .markdown-content blockquote {
+            border-left: 3px solid var(--border-strong);
+            padding-left: 1em;
+            margin: 1em 0;
+            color: var(--muted);
+            background: var(--bg-accent);
+            padding: 10px 12px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        }
+
+        .markdown-content a {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        .markdown-content a:hover {
+            opacity: 0.8;
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1.5em 0;
+        }
+
+        /* JSON Content */
+        .json-content {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+        }
+
+        .json-content pre {
+            margin: 0;
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* Status */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: var(--radius-full);
+            background: var(--ok);
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.offline {
+            background: var(--destructive);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-full);
+            border-top-color: var(--accent);
+            animation: spin 0.75s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: var(--radius-full);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-strong);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <h1>🐶 Memory</h1>
+                <span class="badge">街溜子</span>
+            </div>
+            <div class="header-actions">
+                <button onclick="refreshData()" class="btn">
+                    <span id="refresh-icon">🔄</span>
+                    Refresh
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Files</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Markdown Files</div>
+                <div class="stat-value" id="stat-md">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">JSON Files</div>
+                <div class="stat-value" id="stat-json">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                    <div class="status-dot" id="status-dot"></div>
+                    <span style="font-size: 13px; color: var(--muted);">Connected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-grid">
+            <!-- File List -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Memory Files</div>
+                        <div class="card-subtitle">Browse and view memory files</div>
+                    </div>
+                </div>
+                <div class="file-list" id="file-list">
+                    <div class="empty-state">
+                        <div class="icon">📁</div>
+                        <div>Loading files...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Content -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title" id="content-title">Select a file</div>
+                        <div class="card-subtitle" id="content-subtitle">Click on a file to view its content</div>
+                    </div>
+                </div>
+                <div id="content-area">
+                    <div class="empty-state">
+                        <div class="icon">📄</div>
+                        <div>No file selected</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let refreshInterval = null;
+
+        // Format file size
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Fetch memory files
+        async function fetchMemoryFiles() {
+            try {
+                const response = await fetch('/memory/api/memory');
+                const data = await response.json();
+
+                if (data.success) {
+                    return data.files;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching files:', error);
+                document.getElementById('status-dot').classList.add('offline');
+                return null;
+            }
+        }
+
+        // Fetch single file
+        async function fetchFile(filename) {
+            try {
+                const response = await fetch(`/memory/api/memory/${filename}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    return data.file;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching file:', error);
+                return null;
+            }
+        }
+
+        // Render file list
+        function renderFileList(files) {
+            const container = document.getElementById('file-list');
+
+            if (!files || files.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📁</div>
+                        <div>No files found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = files.map(file => `
+                <div class="file-item ${currentFile === file.name ? 'active' : ''}" onclick="viewFile('${file.name}')">
+                    <div class="file-info">
+                        <div class="file-icon">${file.type === 'json' ? '📊' : '📝'}</div>
+                        <div class="file-name">${file.name}</div>
+                    </div>
+                    <div class="file-meta">
+                        <span class="file-type">${file.type.toUpperCase()}</span>
+                        <span class="file-size">${formatSize(file.size)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render content
+        function renderContent(file) {
+            const titleEl = document.getElementById('content-title');
+            const subtitleEl = document.getElementById('content-subtitle');
+            const contentEl = document.getElementById('content-area');
+
+            if (!file) {
+                titleEl.textContent = 'Select a file';
+                subtitleEl.textContent = 'Click on a file to view its content';
+                contentEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📄</div>
+                        <div>No file selected</div>
+                    </div>
+                `;
+                return;
+            }
+
+            titleEl.textContent = file.name;
+            subtitleEl.textContent = `${formatSize(file.size)} • ${formatDate(file.modified)}`;
+
+            if (file.type === 'json') {
+                contentEl.innerHTML = `
+                    <div class="json-content">
+                        <pre>${JSON.stringify(JSON.parse(file.content), null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                contentEl.innerHTML = `
+                    <div class="markdown-content">
+                        ${marked.parse(file.content)}
+                    </div>
+                `;
+            }
+        }
+
+        // Update stats
+        function updateStats(files) {
+            if (!files) {
+                document.getElementById('stat-total').textContent = '0';
+                document.getElementById('stat-md').textContent = '0';
+                document.getElementById('stat-json').textContent = '0';
+                return;
+            }
+
+            const total = files.length;
+            const mdFiles = files.filter(f => f.type === 'markdown').length;
+            const jsonFiles = files.filter(f => f.type === 'json').length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-md').textContent = mdFiles;
+            document.getElementById('stat-json').textContent = jsonFiles;
+        }
+
+        // View file
+        async function viewFile(filename) {
+            currentFile = filename;
+
+            // Update UI
+            const fileItems = document.querySelectorAll('.file-item');
+            fileItems.forEach(item => {
+                if (item.querySelector('.file-name').textContent === filename) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Fetch and render content
+            let file;
+            if (currentTab === 'memory') {
+                file = await fetchFile(filename);
+            } else {
+                file = await fetchClawdFile(filename);
+            }
+            renderContent(file);
+        }
+
+        // Refresh data
+        async function refreshData() {
+            const refreshIcon = document.getElementById('refresh-icon');
+            refreshIcon.innerHTML = '<span class="loading"></span>';
+
+            const files = await fetchMemoryFiles();
+
+            if (files) {
+                renderFileList(files);
+                updateStats(files);
+                document.getElementById('status-dot').classList.remove('offline');
+            }
+
+            refreshIcon.textContent = '🔄';
+        }
+
+        // Initialize
+        async function init() {
+            await refreshData();
+
+            // Auto refresh every 30 seconds
+            refreshInterval = setInterval(refreshData, 30000);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
